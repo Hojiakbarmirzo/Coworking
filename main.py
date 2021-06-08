@@ -10,6 +10,9 @@ group="Ko'rsatilmagan❗️"
 teacher="Ko'rsatilmagan❗️"
 apply='Berilmagan❌'
 
+
+KnowData=''
+
 BTN_PREV='⬅️Orqaga'
 
 STATE_RGISTRATION=1
@@ -47,8 +50,28 @@ def start(update, context):
     return STATE_ENTRYINFO
 
 
-def innline_callback(update: Update, _: CallbackContext):
-    print(Update)
+
+
+
+def takePhone(update: Update, _: CallbackContext) -> None:
+    """Echo the user message."""
+    # print(update.message.text)
+    global phoneNumber
+    global name
+    if KnowData=='phone_number':
+        phoneNumber=update.message.text
+    elif KnowData=='name':
+        name=update.message.text
+
+    else:
+        print(update.message.text)
+   
+
+        
+    print(phoneNumber,name)
+
+def innline_callback(update: Update, _: CallbackContext)-> None:
+    
 
     query=update.callback_query
 
@@ -73,18 +96,27 @@ def innline_callback(update: Update, _: CallbackContext):
 
 
     if query.data=='phone_number':
+        global KnowData
+        KnowData='phone_number'
         query.edit_message_text(text="Telefoningizni kiriting. \nMasalan: +998930065969", reply_markup=InlineKeyboardMarkup(prev))
+        return STATE_USERINFO
         # global phoneNumber
         
         
     if query.data=='prev':
         query.edit_message_text('''Mening ma'lumotlarim \n 
-    Telefon: {} 
-    Ism: {} 
-    Familiya: {} 
-    Guruh: {} 
-    O'qtuvchi: {} 
-    Ruxsat: {}'''.format(phoneNumber,name,surname,group,teacher,apply), reply_markup=InlineKeyboardMarkup(buttons))
+            Telefon: {} 
+            Ism: {} 
+            Familiya: {} 
+            Guruh: {} 
+            O'qtuvchi: {} 
+            Ruxsat: {}'''.format(phoneNumber,name,surname,group,teacher,apply), reply_markup=InlineKeyboardMarkup(buttons))
+
+    if query.data=='name':
+        KnowData='name'
+        query.edit_message_text(text="Ismingizni kiriting kiriting. \nMasalan: +998930065969", reply_markup=InlineKeyboardMarkup(prev))
+        return STATE_USERINFO
+
 
 
 
@@ -103,7 +135,7 @@ def main():
     dispacher= updater.dispatcher
 
     # Start bosilganda
-    dispacher.add_handler(CommandHandler('start', start))
+    # dispacher.add_handler(CommandHandler('start', start))
 
 
     # inline buttonlar bosilganda
@@ -112,9 +144,10 @@ def main():
         states={
             STATE_ENTRYINFO:[
                 CallbackQueryHandler(innline_callback),
-                MessageHandler(Filters.text & ~Filters.command, innline_callback)
+                # MessageHandler(Filters.text & ~Filters.command, e)
                 ],
             STATE_USERINFO: [
+                MessageHandler(Filters.text & ~Filters.command, takePhone),
                 # MessageHandler(Filters.regex('^(⬅️Orqaga)$')),
                 # MessageHandler(Filters.regex('^(Telefon ✏️)$'))
             ],
@@ -123,9 +156,16 @@ def main():
         fallbacks=[CommandHandler('start', start)]
     )
     dispacher.add_handler(CallbackQueryHandler(innline_callback))
+    dispacher.add_handler(CallbackQueryHandler(takePhone))
+
+
+    dispacher.add_handler(MessageHandler(Filters.text & ~Filters.command, takePhone))
+
+   
     # dispacher.add_handler(CallbackQueryHandler(info))
 
     # dispacher.add_handler(MessageHandler(Filters.text & ~Filters.command, info))
+    dispacher.add_handler(conv_handler)
 
     updater.start_polling()
     updater.idle()

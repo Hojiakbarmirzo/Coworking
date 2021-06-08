@@ -1,5 +1,7 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup,Update, Message
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler,MessageHandler,Filters,CallbackContext,ConversationHandler
+from telegram.replymarkup import ReplyMarkup
+from telegram.replykeyboardmarkup import ReplyKeyboardMarkup
 
 from const import TOKEN
 
@@ -11,17 +13,25 @@ teacher="Ko'rsatilmagan❗️"
 apply='Berilmagan❌'
 
 
-KnowData=''
+chack_info=False
 
+BTN_APPLY="Ruxsat so'rash ✉️"
+btn_apply=ReplyKeyboardMarkup([
+    [BTN_APPLY]
+],resize_keyboard=True)
+
+
+KnowData=''
+BTN_TEACHER="O'qtuvchi ✏️"
 BTN_PREV='⬅️Orqaga'
 
-STATE_RGISTRATION=1
-STATE_BAND=1
+STATE_TEACHER=1
 STATE_USERINFO=1
 STATE_ENTRYINFO=1
 
 def start(update, context):
     user= update.message.from_user
+    print(user)
 
     buttons = [
         [
@@ -33,7 +43,7 @@ def start(update, context):
             InlineKeyboardButton('Guruh ✏️', callback_data='group')
         ],
         [
-            InlineKeyboardButton("O'qtuvchi ✏️", callback_data='teacher')
+            InlineKeyboardButton(BTN_TEACHER, callback_data='teacher')
         ]
     ]
 
@@ -58,17 +68,23 @@ def takePhone(update: Update, _: CallbackContext) -> None:
     # print(update.message.text)
     global phoneNumber
     global name
+    global surname
+    global group
+    global teacher
     if KnowData=='phone_number':
         phoneNumber=update.message.text
     elif KnowData=='name':
         name=update.message.text
+    elif KnowData=='surname':
+        surname=update.message.text
+    elif KnowData=='group':
+        group=update.message.text
+    elif KnowData=='teacher':
+        teacher=update.message.text
 
     else:
         print(update.message.text)
    
-
-        
-    print(phoneNumber,name)
 
 def innline_callback(update: Update, _: CallbackContext)-> None:
     
@@ -104,7 +120,7 @@ def innline_callback(update: Update, _: CallbackContext)-> None:
         
         
     if query.data=='prev':
-        query.edit_message_text('''Mening ma'lumotlarim \n 
+        query.message.reply_text('''Mening ma'lumotlarim \n 
             Telefon: {} 
             Ism: {} 
             Familiya: {} 
@@ -114,8 +130,28 @@ def innline_callback(update: Update, _: CallbackContext)-> None:
 
     if query.data=='name':
         KnowData='name'
-        query.edit_message_text(text="Ismingizni kiriting kiriting. \nMasalan: +998930065969", reply_markup=InlineKeyboardMarkup(prev))
+        query.message.reply_text(text="Ismingizni kiriting kiriting.", reply_markup=InlineKeyboardMarkup(prev))
         return STATE_USERINFO
+        
+    if query.data=='surname':
+        KnowData='surname'
+        query.message.reply_text(text="Familiyangizni kiriting kiriting.", reply_markup=InlineKeyboardMarkup(prev))
+        return STATE_USERINFO
+
+    if query.data=='group':
+        KnowData='group'
+        query.message.reply_text(text="Guruhingizni kiriting kiriting.", reply_markup=InlineKeyboardMarkup(prev))
+        return STATE_USERINFO
+
+    if query.data=='teacher':
+        KnowData='teacher'
+        query.message.reply_text(text="O'qtuvchingizni kiriting kiriting.", reply_markup=InlineKeyboardMarkup(prev))
+        return STATE_USERINFO
+
+    if (phoneNumber !='' and phoneNumber !="Ko'rsatilmagan❗️" and name !='' and name !="Ko'rsatilmagan❗️" and surname!='' and surname != "Ko'rsatilmagan❗️" and group !='' and group != "Ko'rsatilmagan❗️" and teacher!= '' and teacher!= "Ko'rsatilmagan❗️"):
+        query.message.reply_text(text="So'rov jo'natish 👇", reply_markup=btn_apply)
+        
+   
 
 
 
@@ -148,9 +184,12 @@ def main():
                 ],
             STATE_USERINFO: [
                 MessageHandler(Filters.text & ~Filters.command, takePhone),
-                # MessageHandler(Filters.regex('^(⬅️Orqaga)$')),
-                # MessageHandler(Filters.regex('^(Telefon ✏️)$'))
+                
             ],
+            STATE_TEACHER: [
+
+            ]
+
 
         },
         fallbacks=[CommandHandler('start', start)]

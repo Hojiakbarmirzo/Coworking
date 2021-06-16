@@ -30,7 +30,7 @@ control_apply_btn=[
 
 KnowData=''
 
-
+User_id=0
 
 STATE_TEACHER=1
 STATE_USERINFO=1
@@ -38,6 +38,10 @@ STATE_ENTRYINFO=1
 
 def start(update, context):
     user= update.message.from_user
+
+    global User_id
+    User_id=user.id
+    # print(user.id)
 
     buttons = [
         [
@@ -115,9 +119,11 @@ def innline_callback(update, context):
         ]
     ]
     if query.data=="True":
+        context.bot.send_message('1023834871', text='Ruxsat berildi')
         query.message.reply_text(text='Ruxsat berildi')
 
     if query.data=="False":
+        
         query.message.reply_text(text='Ruxsat berilmadidi')
 
 
@@ -134,15 +140,17 @@ def innline_callback(update, context):
 
 
     if query.data=='phone_number':
+        print(update.callback_query.message.chat.id)
         global KnowData
         KnowData='phone_number'
-        query.edit_message_text(text="Telefoningizni kiriting. \nMasalan: +998930065969", reply_markup=InlineKeyboardMarkup(prev))
+        context.bot.send_message(update.callback_query.message.chat.id ,text="Telefoningizni kiriting. \nMasalan: +998930065969", reply_markup=InlineKeyboardMarkup(prev))
+        # query.edit_message_text(text="Telefoningizni kiriting. \nMasalan: +998930065969", reply_markup=InlineKeyboardMarkup(prev))
         return STATE_USERINFO
         # global phoneNumber
         
         
     if query.data=='prev':
-        query.message.reply_text('''Mening ma'lumotlarim \n 
+        context.bot.send_message(update.callback_query.message.chat.id , text='''Mening ma'lumotlarim \n 
             Telefon: {} 
             Ism: {} 
             Familiya: {} 
@@ -152,26 +160,27 @@ def innline_callback(update, context):
 
     if query.data=='name':
         KnowData='name'
-        query.message.reply_text(text="Ismingizni kiriting kiriting.", reply_markup=InlineKeyboardMarkup(prev))
+        context.bot.send_message(update.callback_query.message.chat.id , text="Ismingizni kiriting kiriting.", reply_markup=InlineKeyboardMarkup(prev))
         return STATE_USERINFO
         
     if query.data=='surname':
         KnowData='surname'
-        query.message.reply_text(text="Familiyangizni kiriting kiriting.", reply_markup=InlineKeyboardMarkup(prev))
+        context.bot.send_message(update.callback_query.message.chat.id ,text="Familiyangizni kiriting kiriting.", reply_markup=InlineKeyboardMarkup(prev))
         return STATE_USERINFO
 
     if query.data=='group':
         KnowData='group'
-        query.message.reply_text(text="Guruhingizni kiriting kiriting.", reply_markup=InlineKeyboardMarkup(prev))
+        context.bot.send_message(update.callback_query.message.chat.id ,text="Guruhingizni kiriting kiriting.", reply_markup=InlineKeyboardMarkup(prev))
         return STATE_USERINFO
 
     if query.data=='teacher':
         KnowData='teacher'
-        query.message.reply_text(text="O'qtuvchingizni kiriting kiriting.", reply_markup=InlineKeyboardMarkup(prev))
+        context.bot.send_message(update.callback_query.message.chat.id ,text="O'qtuvchingizni kiriting kiriting.", reply_markup=InlineKeyboardMarkup(prev))
         return STATE_USERINFO
 
     if (phoneNumber !='' and phoneNumber !="Ko'rsatilmagan❗️" and name !='' and name !="Ko'rsatilmagan❗️" and surname!='' and surname != "Ko'rsatilmagan❗️" and group !='' and group != "Ko'rsatilmagan❗️" and teacher!= '' and teacher!= "Ko'rsatilmagan❗️"):
-        query.message.reply_text(text="So'rov jo'natish 👇", reply_markup=InlineKeyboardMarkup(btn_apply))
+        if update.callback_query.message.chat.id !=ADMIN:
+            context.bot.send_message(update.callback_query.message.chat.id ,text="So'rov jo'natish 👇", reply_markup=InlineKeyboardMarkup(btn_apply))
         
 
         

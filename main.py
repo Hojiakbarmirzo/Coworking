@@ -4,6 +4,7 @@ from telegram.replymarkup import ReplyMarkup
 from telegram.replykeyboardmarkup import ReplyKeyboardMarkup
 
 from const import TOKEN
+from const import ADMIN
 
 phoneNumber="Ko'rsatilmagan❗️"
 name="Ko'rsatilmagan❗️"
@@ -15,15 +16,21 @@ apply='Berilmagan❌'
 
 chack_info=False
 
-BTN_APPLY="Ruxsat so'rash ✉️"
-btn_apply=ReplyKeyboardMarkup([
-    [BTN_APPLY]
-],resize_keyboard=True)
 
+btn_apply = [ 
+    [ InlineKeyboardButton("Ruxsat so'rash ✉️", callback_data='request')]
+]
+
+control_apply_btn=[
+        [
+            InlineKeyboardButton('Ruxsat berish ✅', callback_data='True'),
+            InlineKeyboardButton('Rad etish ❌', callback_data='False')
+        ]
+    ]  
 
 KnowData=''
-BTN_TEACHER="O'qtuvchi ✏️"
-BTN_PREV='⬅️Orqaga'
+
+
 
 STATE_TEACHER=1
 STATE_USERINFO=1
@@ -31,7 +38,6 @@ STATE_ENTRYINFO=1
 
 def start(update, context):
     user= update.message.from_user
-    print(user)
 
     buttons = [
         [
@@ -43,7 +49,7 @@ def start(update, context):
             InlineKeyboardButton('Guruh ✏️', callback_data='group')
         ],
         [
-            InlineKeyboardButton(BTN_TEACHER, callback_data='teacher')
+            InlineKeyboardButton("O'qtuvchi ✏️", callback_data='teacher')
         ]
     ]
 
@@ -63,9 +69,8 @@ def start(update, context):
 
 
 
-def takePhone(update: Update, _: CallbackContext) -> None:
-    """Echo the user message."""
-    # print(update.message.text)
+def takePhone(update, context) -> None:
+
     global phoneNumber
     global name
     global surname
@@ -86,7 +91,7 @@ def takePhone(update: Update, _: CallbackContext) -> None:
         print(update.message.text)
    
 
-def innline_callback(update: Update, _: CallbackContext)-> None:
+def innline_callback(update, context):
     
 
     query=update.callback_query
@@ -109,6 +114,23 @@ def innline_callback(update: Update, _: CallbackContext)-> None:
             InlineKeyboardButton("O'qtuvchi ✏️", callback_data='teacher')
         ]
     ]
+    if query.data=="True":
+        query.message.reply_text(text='Ruxsat berildi')
+
+    if query.data=="False":
+        query.message.reply_text(text='Ruxsat berilmadidi')
+
+
+
+    if query.data=='request':
+        query.edit_message_text(text="Ma'lumotlaringiz adminga yuborildi. Yaqin orada javobini olasiz")
+        context.bot.send_message(ADMIN, text='''O'quvchining ma'lumotlari \n 
+             Telefon: {} 
+             Ism: {} 
+             Familiya: {} 
+             Guruh: {} 
+             O'qtuvchi: {} 
+             Ruxsat: {}'''.format(phoneNumber,name,surname,group,teacher,apply), reply_markup=InlineKeyboardMarkup(control_apply_btn))
 
 
     if query.data=='phone_number':
@@ -149,7 +171,9 @@ def innline_callback(update: Update, _: CallbackContext)-> None:
         return STATE_USERINFO
 
     if (phoneNumber !='' and phoneNumber !="Ko'rsatilmagan❗️" and name !='' and name !="Ko'rsatilmagan❗️" and surname!='' and surname != "Ko'rsatilmagan❗️" and group !='' and group != "Ko'rsatilmagan❗️" and teacher!= '' and teacher!= "Ko'rsatilmagan❗️"):
-        query.message.reply_text(text="So'rov jo'natish 👇", reply_markup=btn_apply)
+        query.message.reply_text(text="So'rov jo'natish 👇", reply_markup=InlineKeyboardMarkup(btn_apply))
+        
+
         
    
 
@@ -171,40 +195,17 @@ def main():
     dispacher= updater.dispatcher
 
     # Start bosilganda
-    # dispacher.add_handler(CommandHandler('start', start))
+    dispacher.add_handler(CommandHandler('start', start))
 
-
-    # inline buttonlar bosilganda
-    conv_handler=ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
-        states={
-            STATE_ENTRYINFO:[
-                CallbackQueryHandler(innline_callback),
-                # MessageHandler(Filters.text & ~Filters.command, e)
-                ],
-            STATE_USERINFO: [
-                MessageHandler(Filters.text & ~Filters.command, takePhone),
-                
-            ],
-            STATE_TEACHER: [
-
-            ]
-
-
-        },
-        fallbacks=[CommandHandler('start', start)]
-    )
+   
     dispacher.add_handler(CallbackQueryHandler(innline_callback))
     dispacher.add_handler(CallbackQueryHandler(takePhone))
 
 
     dispacher.add_handler(MessageHandler(Filters.text & ~Filters.command, takePhone))
 
-   
-    # dispacher.add_handler(CallbackQueryHandler(info))
 
-    # dispacher.add_handler(MessageHandler(Filters.text & ~Filters.command, info))
-    dispacher.add_handler(conv_handler)
+
 
     updater.start_polling()
     updater.idle()
